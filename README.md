@@ -2,6 +2,8 @@
 
 Explore vector embeddings from vector databases in 3D. Run one binary, open `localhost:8080` in your browser.
 
+![VectorViz Demo](vectorviz-demo.gif)
+
 ## Features
 
 - **3D Visualization**: Interactive point cloud rendering using React Three Fiber
