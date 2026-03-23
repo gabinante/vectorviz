@@ -34,7 +34,7 @@ const COLORS = {
 
 // Point size
 const POINT_RADIUS = 0.015;
-const POINT_SEGMENTS = 8;
+const POINT_SEGMENTS = 12;
 
 // Animation settings
 const FADE_IN_DURATION = 0.3; // seconds for new points
@@ -77,11 +77,15 @@ export function InstancedPoints({
     return new THREE.SphereGeometry(POINT_RADIUS, POINT_SEGMENTS, POINT_SEGMENTS);
   }, []);
 
-  // Shared material with vertex colors
+  // Shared material — MeshStandardMaterial for lit, volumetric appearance
   const material = useMemo(() => {
-    return new THREE.MeshBasicMaterial({
+    return new THREE.MeshStandardMaterial({
       vertexColors: false,
       toneMapped: false,
+      transparent: true,
+      opacity: 0.75,
+      roughness: 0.4,
+      metalness: 0.1,
     });
   }, []);
 

@@ -126,7 +126,16 @@ impl ConnectionManager {
             "weaviate" => {
                 let host = req.host.clone().unwrap_or_else(|| "localhost".to_string());
                 let port = req.port.unwrap_or(8080);
-                let url = format!("http://{}:{}", host, port);
+
+                // If the host is already a full URL, use it directly.
+                // Auto-detect Weaviate Cloud hostnames and use HTTPS.
+                let url = if host.starts_with("http://") || host.starts_with("https://") {
+                    host.trim_end_matches('/').to_string()
+                } else if host.contains(".weaviate.cloud") || host.contains(".weaviate.network") {
+                    format!("https://{}", host.trim_end_matches('/'))
+                } else {
+                    format!("http://{}:{}", host, port)
+                };
 
                 match weaviate::WeaviateClient::connect(&url, req.api_key.as_deref()).await {
                     Ok(client) => {

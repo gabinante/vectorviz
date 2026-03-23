@@ -284,7 +284,7 @@ function AnimatedCard({
     <group ref={groupRef} position={position}>
       <mesh>
         <sphereGeometry args={[0.015, 8, 8]} />
-        <meshBasicMaterial
+        <meshStandardMaterial
           color={
             vector.id === selectedId
               ? '#51cf66'
@@ -294,6 +294,10 @@ function AnimatedCard({
               ? '#ffd43b'
               : '#4a90d9'
           }
+          transparent
+          opacity={0.75}
+          roughness={0.4}
+          metalness={0.1}
         />
       </mesh>
 
@@ -366,15 +370,6 @@ export function FocusCards({
   const focusVectors = useMemo(() => {
     return vectors.filter(v => v.projection && focusIds.has(v.id));
   }, [vectors, focusIds]);
-
-  // Initialize positions for focus vectors
-  useEffect(() => {
-    for (const v of focusVectors) {
-      if (v.projection) {
-        currentPositions.set(v.id, new THREE.Vector3(...v.projection));
-      }
-    }
-  }, [focusVectors]);
 
   // Clear hover state when a node is selected, but keep explosion
   useEffect(() => {

@@ -337,11 +337,12 @@ export function SettingsPanel({ isOpen, onClose, onConnectionChange }: SettingsP
     setError(null);
 
     try {
+      const isCloudUrl = host.startsWith('http://') || host.startsWith('https://');
       const config: ConnectionConfig = {
         type: connectorType,
         host,
-        port: parseInt(port, 10),
-        grpc_port: parseInt(grpcPort, 10),
+        port: isCloudUrl ? undefined : parseInt(port, 10),
+        grpc_port: isCloudUrl ? undefined : parseInt(grpcPort, 10),
         api_key: apiKey || undefined,
       };
 
@@ -358,7 +359,7 @@ export function SettingsPanel({ isOpen, onClose, onConnectionChange }: SettingsP
               name: connectionName.trim(),
               db_type: connectorType,
               host,
-              port: parseInt(port, 10),
+              port: isCloudUrl ? 443 : parseInt(port, 10),
               api_key: apiKey || undefined,
             });
             setConnectionName('');
@@ -539,54 +540,65 @@ export function SettingsPanel({ isOpen, onClose, onConnectionChange }: SettingsP
         {/* Weaviate Config */}
         {connectorType === 'weaviate' && (
           <>
-            <div style={styles.row}>
-              <div style={styles.field}>
-                <label style={styles.label}>Host</label>
-                <input
-                  type="text"
-                  style={styles.input}
-                  value={host}
-                  onChange={(e) => setHost(e.target.value)}
-                  placeholder="localhost"
-                  disabled={isLoading}
-                />
-              </div>
-              <div style={{ width: 100 }}>
-                <label style={styles.label}>Port</label>
-                <input
-                  type="text"
-                  style={styles.input}
-                  value={port}
-                  onChange={(e) => setPort(e.target.value)}
-                  placeholder="8080"
-                  disabled={isLoading}
-                />
-              </div>
+            {/* Host / URL */}
+            <div style={styles.section}>
+              <label style={styles.label}>Host or Cloud URL</label>
+              <input
+                type="text"
+                style={styles.input}
+                value={host}
+                onChange={(e) => setHost(e.target.value)}
+                placeholder="localhost or https://my-cluster.weaviate.network"
+                disabled={isLoading}
+              />
+              {host.startsWith('https://') && (
+                <div style={{ fontSize: 11, color: '#4a90d9', marginTop: 4 }}>
+                  Cloud URL detected — port fields will be ignored
+                </div>
+              )}
             </div>
 
-            <div style={styles.row}>
-              <div style={{ width: 100 }}>
-                <label style={styles.label}>gRPC Port</label>
-                <input
-                  type="text"
-                  style={styles.input}
-                  value={grpcPort}
-                  onChange={(e) => setGrpcPort(e.target.value)}
-                  placeholder="50051"
-                  disabled={isLoading}
-                />
+            {/* Port fields (only relevant for local instances) */}
+            {!host.startsWith('http://') && !host.startsWith('https://') && (
+              <div style={styles.row}>
+                <div style={{ width: 100 }}>
+                  <label style={styles.label}>Port</label>
+                  <input
+                    type="text"
+                    style={styles.input}
+                    value={port}
+                    onChange={(e) => setPort(e.target.value)}
+                    placeholder="8080"
+                    disabled={isLoading}
+                  />
+                </div>
+                <div style={{ width: 100 }}>
+                  <label style={styles.label}>gRPC Port</label>
+                  <input
+                    type="text"
+                    style={styles.input}
+                    value={grpcPort}
+                    onChange={(e) => setGrpcPort(e.target.value)}
+                    placeholder="50051"
+                    disabled={isLoading}
+                  />
+                </div>
+                <div style={styles.field} />
               </div>
-              <div style={styles.field}>
-                <label style={styles.label}>API Key (optional)</label>
-                <input
-                  type="password"
-                  style={styles.input}
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  placeholder="Enter API key..."
-                  disabled={isLoading}
-                />
-              </div>
+            )}
+
+            <div style={styles.section}>
+              <label style={styles.label}>
+                API Key {host.startsWith('https://') ? '(required for cloud)' : '(optional)'}
+              </label>
+              <input
+                type="password"
+                style={styles.input}
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder="Enter API key..."
+                disabled={isLoading}
+              />
             </div>
           </>
         )}
