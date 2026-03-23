@@ -581,8 +581,17 @@ export const useVectorStore = create<VectorStoreState>((set, get) => ({
         isLoading: false,
       });
       // Auto-select the top result (use selectVector to track history)
+      // Look up the projected version from the vectors array so the camera
+      // can fly to it and the focus card renders at the correct position.
       if (results.length > 0) {
-        get().selectVector(results[0]);
+        const topResult = results[0];
+        const projected = get().vectors.find((v) => v.id === topResult.id);
+        if (projected) {
+          // Merge projection coordinates with the search result's distance
+          get().selectVector({ ...projected, distance: topResult.distance });
+        } else {
+          get().selectVector(topResult);
+        }
       }
     } catch (err) {
       set({

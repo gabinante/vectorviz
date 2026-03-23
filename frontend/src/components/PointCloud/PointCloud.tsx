@@ -152,19 +152,16 @@ export function PointCloud({
     return ids;
   }, [vectors, isSmallCollection, selectedId, hoveredId, searchResultIds, neighborIds]);
 
-  // Clear stale positions when vectors change (e.g., collection switch)
+  // Initialize positions for ALL vectors (focus + non-focus) in one pass
+  // FocusCards' AnimatedCard.useFrame will overwrite focus positions with animated values each frame
   useEffect(() => {
     currentPositions.clear();
-  }, [vectors]);
-
-  // Initialize positions in shared store for non-focus vectors
-  useEffect(() => {
     for (const v of vectors) {
-      if (v.projection && !focusIds.has(v.id)) {
+      if (v.projection) {
         currentPositions.set(v.id, new THREE.Vector3(...v.projection));
       }
     }
-  }, [vectors, focusIds]);
+  }, [vectors]);
 
   // Handle hover from both instanced points and focus cards
   const handleHover = useCallback((id: string | null) => {
@@ -193,6 +190,7 @@ export function PointCloud({
         neighbors={neighbors}
         edgeThreshold={edgeThreshold}
         maxProximityEdges={500}
+        searchResultIds={searchResultIds}
       />
 
       {/* Instanced points for all non-focus vectors (single draw call) */}

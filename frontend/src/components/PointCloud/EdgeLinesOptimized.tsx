@@ -16,6 +16,7 @@ interface EdgeLinesOptimizedProps {
   neighbors: VectorRecord[];
   edgeThreshold: number;
   maxProximityEdges?: number;
+  searchResultIds?: Set<string>;
 }
 
 export function EdgeLinesOptimized({
@@ -24,6 +25,7 @@ export function EdgeLinesOptimized({
   neighbors,
   edgeThreshold,
   maxProximityEdges = 500,
+  searchResultIds,
 }: EdgeLinesOptimizedProps) {
   const lineRef = useRef<THREE.LineSegments>(null);
   const neighborLineRef = useRef<THREE.LineSegments>(null);
@@ -125,6 +127,10 @@ export function EdgeLinesOptimized({
 
         if (!pos1 || !pos2) continue;
 
+        // Skip edges to uninitialized (origin) positions
+        if ((pos1.x === 0 && pos1.y === 0 && pos1.z === 0) ||
+            (pos2.x === 0 && pos2.y === 0 && pos2.z === 0)) continue;
+
         const idx = visibleEdges * 6;
 
         // Start vertex
@@ -137,10 +143,23 @@ export function EdgeLinesOptimized({
         positions.array[idx + 4] = pos2.y;
         positions.array[idx + 5] = pos2.z;
 
+        // Grey out edges not connected to search results when search is active
+        const hasSearch = searchResultIds && searchResultIds.size > 0;
+        const isSearchEdge = hasSearch && (searchResultIds.has(edge.id1) || searchResultIds.has(edge.id2));
+        const dimFactor = hasSearch && !isSearchEdge ? 0.15 : 1;
+
         // Colors (with opacity baked in)
-        const r = edge.color.r * edge.opacity;
-        const g = edge.color.g * edge.opacity;
-        const b = edge.color.b * edge.opacity;
+        let r: number, g: number, b: number;
+        if (hasSearch && !isSearchEdge) {
+          // Greyed out: muted grey
+          r = 0.3 * dimFactor;
+          g = 0.3 * dimFactor;
+          b = 0.3 * dimFactor;
+        } else {
+          r = edge.color.r * edge.opacity;
+          g = edge.color.g * edge.opacity;
+          b = edge.color.b * edge.opacity;
+        }
 
         colors.array[idx] = r;
         colors.array[idx + 1] = g;
@@ -175,6 +194,10 @@ export function EdgeLinesOptimized({
 
         if (!pos1 || !pos2) continue;
 
+        // Skip edges to uninitialized (origin) positions
+        if ((pos1.x === 0 && pos1.y === 0 && pos1.z === 0) ||
+            (pos2.x === 0 && pos2.y === 0 && pos2.z === 0)) continue;
+
         const idx = visibleEdges * 6;
 
         positions.array[idx] = pos1.x;
@@ -184,9 +207,20 @@ export function EdgeLinesOptimized({
         positions.array[idx + 4] = pos2.y;
         positions.array[idx + 5] = pos2.z;
 
-        const r = edge.color.r;
-        const g = edge.color.g;
-        const b = edge.color.b;
+        // Grey out neighbor edges not connected to search results when search is active
+        const hasSearchN = searchResultIds && searchResultIds.size > 0;
+        const isSearchEdgeN = hasSearchN && (searchResultIds.has(edge.id1) || searchResultIds.has(edge.id2));
+
+        let r: number, g: number, b: number;
+        if (hasSearchN && !isSearchEdgeN) {
+          r = 0.3 * 0.15;
+          g = 0.3 * 0.15;
+          b = 0.3 * 0.15;
+        } else {
+          r = edge.color.r;
+          g = edge.color.g;
+          b = edge.color.b;
+        }
 
         colors.array[idx] = r;
         colors.array[idx + 1] = g;
